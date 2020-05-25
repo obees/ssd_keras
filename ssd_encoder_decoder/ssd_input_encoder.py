@@ -330,10 +330,10 @@ class SSDInputEncoder:
             labels = ground_truth_labels[i].astype(np.float) # The labels for this batch item
 
             # Check for degenerate ground truth bounding boxes before attempting any computations.
-            if np.any(labels[:,[xmax]] - labels[:,[xmin]] <= 0) or np.any(labels[:,[ymax]] - labels[:,[ymin]] <= 0):
-                raise DegenerateBoxError("SSDInputEncoder detected degenerate ground truth bounding boxes for batch item {} with bounding boxes {}, ".format(i, labels) +
-                                         "i.e. bounding boxes where xmax <= xmin and/or ymax <= ymin. Degenerate ground truth " +
-                                         "bounding boxes will lead to NaN errors during the training.")
+            # if np.any(labels[:,[xmax]] - labels[:,[xmin]] <= 0) or np.any(labels[:,[ymax]] - labels[:,[ymin]] <= 0):
+                # raise DegenerateBoxError("SSDInputEncoder detected degenerate ground truth bounding boxes for batch item {} with bounding boxes {}, ".format(i, labels) +
+                                        #  "i.e. bounding boxes where xmax <= xmin and/or ymax <= ymin. Degenerate ground truth " +
+                                        #  "bounding boxes will lead to NaN errors during the training.")
 
             # Maybe normalize the box coordinates.
             if self.normalize_coords:

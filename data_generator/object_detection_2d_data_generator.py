@@ -17,11 +17,12 @@ limitations under the License.
 '''
 
 from __future__ import division
+import tensorflow as tf
 import numpy as np
 import inspect
 from collections import defaultdict
 import warnings
-import sklearn.utils
+#import sklearn.utils
 from copy import deepcopy
 from PIL import Image
 import cv2
@@ -828,7 +829,7 @@ class DataGenerator:
         self.dataset_indices = np.arange(self.dataset_size, dtype=np.int32) # Instead of shuffling the HDF5 dataset, we will shuffle this index list.
 
     def generate(self,
-                 batch_size=32,
+                 batch_size=16,
                  shuffle=True,
                  transformations=[],
                  label_encoder=None,
@@ -930,19 +931,30 @@ class DataGenerator:
         # Do a few preparatory things like maybe shuffling the dataset initially.
         #############################################################################################
 
-        if shuffle:
-            objects_to_shuffle = [self.dataset_indices]
-            if not (self.filenames is None):
-                objects_to_shuffle.append(self.filenames)
-            if not (self.labels is None):
-                objects_to_shuffle.append(self.labels)
-            if not (self.image_ids is None):
-                objects_to_shuffle.append(self.image_ids)
-            if not (self.eval_neutral is None):
-                objects_to_shuffle.append(self.eval_neutral)
-            shuffled_objects = sklearn.utils.shuffle(*objects_to_shuffle)
-            for i in range(len(objects_to_shuffle)):
-                objects_to_shuffle[i][:] = shuffled_objects[i]
+        # if shuffle:
+        #     objects_to_shuffle = [self.dataset_indices]
+        #     if not (self.filenames is None):
+        #         objects_to_shuffle.append(self.filenames)
+        #     if not (self.labels is None):
+        #         objects_to_shuffle.append(self.labels)
+        #     if not (self.image_ids is None):
+        #         objects_to_shuffle.append(self.image_ids)
+        #     if not (self.eval_neutral is None):
+        #         objects_to_shuffle.append(self.eval_neutral)
+        #     shuffled_objects = sklearn.utils.shuffle(*objects_to_shuffle)
+        #     for i in range(len(objects_to_shuffle)):
+        #         objects_to_shuffle[i][:] = shuffled_objects[i]
+
+        #     idx = tf.random.shuffle(self.dataset_indices)
+        #     # x_data = tf.gather(x_data, idx)
+        #     if not (self.filenames is None):
+        #         self.filenames = tf.gather(self.filenames, idx).numpy()
+        #     if not (self.labels is None):
+        #         self.labels = tf.gather(self.labels, idx).numpy()
+        #     if not (self.image_ids is None):
+        #         self.image_ids = tf.gather(self.image_ids, idx).numpy()
+        #     if not (self.eval_neutral is None):
+        #         self.eval_neutral = tf.gather(self.eval_neutral, idx).numpy()
 
         if degenerate_box_handling == 'remove':
             box_filter = BoxFilter(check_overlap=False,
@@ -962,29 +974,42 @@ class DataGenerator:
         current = 0
 
         while True:
-
+        
             batch_X, batch_y = [], []
 
             if current >= self.dataset_size:
                 current = 0
 
+            
             #########################################################################################
             # Maybe shuffle the dataset if a full pass over the dataset has finished.
             #########################################################################################
 
-                if shuffle:
-                    objects_to_shuffle = [self.dataset_indices]
-                    if not (self.filenames is None):
-                        objects_to_shuffle.append(self.filenames)
-                    if not (self.labels is None):
-                        objects_to_shuffle.append(self.labels)
-                    if not (self.image_ids is None):
-                        objects_to_shuffle.append(self.image_ids)
-                    if not (self.eval_neutral is None):
-                        objects_to_shuffle.append(self.eval_neutral)
-                    shuffled_objects = sklearn.utils.shuffle(*objects_to_shuffle)
-                    for i in range(len(objects_to_shuffle)):
-                        objects_to_shuffle[i][:] = shuffled_objects[i]
+                # if shuffle:
+                    # objects_to_shuffle = [self.dataset_indices]
+                    # indices = tf.range(start=0, limit=tf.shape(x_data)[0], dtype=tf.int32)
+                    # if not (self.filenames is None):
+                    #     objects_to_shuffle.append(self.filenames)
+                    # if not (self.labels is None):
+                    #     objects_to_shuffle.append(self.labels)
+                    # if not (self.image_ids is None):
+                    #     objects_to_shuffle.append(self.image_ids)
+                    # if not (self.eval_neutral is None):
+                    #     objects_to_shuffle.append(self.eval_neutral)
+                    # shuffled_objects = sklearn.utils.shuffle(*objects_to_shuffle)
+                    # for i in range(len(objects_to_shuffle)):
+                    #     objects_to_shuffle[i][:] = shuffled_objects[i]
+
+                    # idx = tf.random.shuffle(self.dataset_indices)
+                    # # x_data = tf.gather(x_data, idx)
+                    # if not (self.filenames is None):
+                    #     self.filenames = tf.gather(self.filenames, idx).numpy()
+                    # if not (self.labels is None):
+                    #     self.labels = tf.gather(self.labels, idx).numpy()
+                    # if not (self.image_ids is None):
+                    #     self.image_ids = tf.gather(self.image_ids, idx).numpy()
+                    # if not (self.eval_neutral is None):
+                    #     self.eval_neutral = tf.gather(self.eval_neutral, idx).numpy()
 
             #########################################################################################
             # Get the images, (maybe) image IDs, (maybe) labels, etc. for this batch.
@@ -1160,8 +1185,9 @@ class DataGenerator:
             #########################################################################################
 
             ret = []
-            if 'processed_images' in returns: ret.append(batch_X)
-            if 'encoded_labels' in returns: ret.append(batch_y_encoded)
+            if 'processed_images' in returns: ret.append(tf.convert_to_tensor(batch_X))
+            if 'encoded_labels' in returns: ret.append(tf.convert_to_tensor(batch_y_encoded))
+            #if 'nones_for_samples' in returns: ret.append([None])
             if 'matched_anchors' in returns: ret.append(batch_matched_anchors)
             if 'processed_labels' in returns: ret.append(batch_y)
             if 'filenames' in returns: ret.append(batch_filenames)
@@ -1170,8 +1196,11 @@ class DataGenerator:
             if 'inverse_transform' in returns: ret.append(batch_inverse_transforms)
             if 'original_images' in returns: ret.append(batch_original_images)
             if 'original_labels' in returns: ret.append(batch_original_labels)
-
-            yield ret
+            # print(ret)
+            yield tuple(ret)
+            # batch_X = tf.convert_to_tensor(batch_X)
+            # batch_y_encoded = tf.convert_to_tensor(batch_y_encoded)
+            # yield tuple(batch_X, batch_y_encoded)
 
     def save_dataset(self,
                      filenames_path='filenames.pkl',
@@ -1218,3 +1247,54 @@ class DataGenerator:
             The number of images in the dataset.
         '''
         return self.dataset_size
+
+# OBO
+
+    def generate_oneshot_encoded(self,label_encoder):
+                #  label_encoder=None,
+                #  returns={'processed_images', 'encoded_labels'},
+                #  keep_images_without_gt=False,
+                #  degenerate_box_handling='remove'):
+        box_filter2 = BoxFilter(check_overlap=False,
+                               check_min_area=False,
+                               check_degenerate=True,
+                               labels_format=self.labels_format)
+
+        batch_X, batch_y = [], []
+        batch_items_to_remove = []
+
+        for current in range(self.dataset_size):
+
+            batch_X.append(self.images[current])
+            
+            if (self.labels[current].size > 0):
+                batch_y.append(np.array(deepcopy(self.labels[current])))
+
+        
+            # Check for degenerate boxes in this batch item.
+            #########################################################################################
+
+
+        #     xmin = self.labels_format['xmin']
+        #     ymin = self.labels_format['ymin']
+        #     xmax = self.labels_format['xmax']
+        #     ymax = self.labels_format['ymax']
+
+        #     if np.any(batch_y[current][:,xmax] - batch_y[current][:,xmin] <= 0) or np.any(batch_y[current][:,ymax] - batch_y[current][:,ymin] <= 0):
+        #         batch_y[current] = box_filter2(labels=batch_y[current])
+        #         if (batch_y[current].size == 0):
+        #             batch_items_to_remove.append(i)
+
+        # if batch_items_to_remove:
+        #     for j in sorted(batch_items_to_remove, reverse=True):
+        #         # This isn't efficient, but it hopefully shouldn't need to be done often anyway.
+        #         batch_X.pop(j)
+        #         batch_filenames.pop(j)
+        #         batch_y.pop(j)
+        
+        # batch_X = np.array(batch_X)
+        batch_X = tf.convert_to_tensor(batch_X)
+       
+        batch_y_encoded = tf.convert_to_tensor(label_encoder(batch_y, diagnostics=False))
+        
+        return batch_X, batch_y_encoded

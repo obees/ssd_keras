@@ -15,13 +15,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-
 from __future__ import division
+import tensorflow as tf
 import numpy as np
-from keras.models import Model
-from keras.layers import Input, Lambda, Conv2D, MaxPooling2D, BatchNormalization, ELU, Reshape, Concatenate, Activation
-from keras.regularizers import l2
-import keras.backend as K
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Lambda, Conv2D, MaxPooling2D, BatchNormalization, ELU, Reshape, Concatenate, Activation
+from tensorflow.keras.regularizers import l2
+import tensorflow.keras.backend as K
 
 from keras_layers.keras_layer_AnchorBoxes import AnchorBoxes
 from keras_layers.keras_layer_DecodeDetections import DecodeDetections
