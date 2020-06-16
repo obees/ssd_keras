@@ -66,8 +66,8 @@ class AnchorBoxes(Layer):
                  this_steps=None,
                  this_offsets=None,
                  clip_boxes=False,
-                 variances=[0.1, 0.1, 0.2, 0.2],
-                 coords='centroids',
+                 variances=[1.0, 1.0, 1.0, 1.0],
+                 coords='corners',
                  normalize_coords=False,
                  **kwargs):
         '''

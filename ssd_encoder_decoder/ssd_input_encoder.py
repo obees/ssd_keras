@@ -40,20 +40,20 @@ class SSDInputEncoder:
                  predictor_sizes,
                  min_scale=0.1,
                  max_scale=0.9,
-                 scales=None,
+                 scales=[0.08, 0.16, 0.32, 0.64, 0.96],
                  aspect_ratios_global=[0.5, 1.0, 2.0],
                  aspect_ratios_per_layer=None,
                  two_boxes_for_ar1=True,
                  steps=None,
                  offsets=None,
                  clip_boxes=False,
-                 variances=[0.1, 0.1, 0.2, 0.2],
+                 variances=[1.0, 1.0, 1.0, 1.0],
                  matching_type='multi',
                  pos_iou_threshold=0.5,
                  neg_iou_limit=0.3,
                  border_pixels='half',
-                 coords='centroids',
-                 normalize_coords=True,
+                 coords='corners',
+                 normalize_coords=False,
                  background_id=0):
         '''
         Arguments:
@@ -392,8 +392,18 @@ class SSDInputEncoder:
         ##################################################################################
         # Convert box coordinates to anchor box offsets.
         ##################################################################################
+        # print('ouch')
 
-        if self.coords == 'centroids':
+        # toto = self.coords
+        # if self.matching_type=='multi':
+            # print('ooo')
+        # if self.coords=='centroids':
+        #     print('1')
+        # elif self.coords=='corners':
+        #     y_encoded[:,:,-12:-8] -= y_encoded[:,:,-8:-4]
+
+
+        if self.coords=='centroids':
             y_encoded[:,:,[-12,-11]] -= y_encoded[:,:,[-8,-7]] # cx(gt) - cx(anchor), cy(gt) - cy(anchor)
             y_encoded[:,:,[-12,-11]] /= y_encoded[:,:,[-6,-5]] * y_encoded[:,:,[-4,-3]] # (cx(gt) - cx(anchor)) / w(anchor) / cx_variance, (cy(gt) - cy(anchor)) / h(anchor) / cy_variance
             y_encoded[:,:,[-10,-9]] /= y_encoded[:,:,[-6,-5]] # w(gt) / w(anchor), h(gt) / h(anchor)

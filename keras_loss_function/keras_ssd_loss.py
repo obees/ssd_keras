@@ -18,7 +18,7 @@ limitations under the License.
 
 from __future__ import division
 import tensorflow as tf
-import debugpy
+# import debugpy
 class SSDLoss:
     '''
     The SSD loss, see https://arxiv.org/abs/1512.02325.
