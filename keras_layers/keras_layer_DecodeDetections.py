@@ -172,7 +172,9 @@ class DecodeDetections(Layer):
                 # a tensor of shape (n_boxes, 1 + 4 coordinates) that contains the
                 # confidnece values for just one class, determined by `index`.
                 confidences = tf.expand_dims(batch_item[..., index], axis=-1)
-                class_id = tf.fill(dims=tf.shape(confidences), value=tf.to_float(index))
+                # class_id = tf.fill(dims=tf.shape(confidences), value=tf.to_float(index))
+                class_id = tf.fill(dims=tf.shape(confidences), value=tf.dtypes.cast(index, tf.float32))
+                
                 box_coordinates = batch_item[...,-4:]
 
                 single_class = tf.concat([class_id, confidences, box_coordinates], axis=-1)
@@ -254,14 +256,21 @@ class DecodeDetections(Layer):
             return top_k_boxes
 
         # Iterate `filter_predictions()` over all batch items.
-        output_tensor = tf.map_fn(fn=lambda x: filter_predictions(x),
-                                  elems=y_pred,
-                                  dtype=None,
-                                  parallel_iterations=128,
-                                  back_prop=False,
-                                  swap_memory=False,
-                                  infer_shape=True,
-                                  name='loop_over_batch')
+        # output_tensor = tf.map_fn(fn=lambda x: filter_predictions(x),
+        #                           elems=y_pred,
+        #                           dtype=None,
+        #                           parallel_iterations=128,
+        #                           back_prop=False,
+        #                           swap_memory=False,
+        #                           infer_shape=True,
+        #                           name='loop_over_batch')
+        # output_tensor = tf.nest.map_structure(tf.stop_gradient, tf.map_fn(fn, elems))
+        output_tensor = tf.nest.map_structure(tf.stop_gradient, tf.map_fn(fn=lambda x: filter_predictions(x), 
+                                                                          elems=y_pred,
+                                                                          parallel_iterations=128,
+                                                                          swap_memory=False,
+                                                                          infer_shape=True,
+                                                                          name='loop_over_batch'))
 
         return output_tensor
 
